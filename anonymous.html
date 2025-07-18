@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGL: ask me anything</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .confession-card {
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        .confession-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .bg-pastel-pink {
+            background-color: #FFD6E0;
+        }
+        .bg-pastel-purple {
+            background-color: #E6E6FA;
+        }
+        .bg-pastel-blue {
+            background-color: #B9E0FF;
+        }
+        .bg-pastel-green {
+            background-color: #D0F0C0;
+        }
+        .bg-pastel-yellow {
+            background-color: #FFFACD;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/3e60352c-e5b2-4b9b-887e-f0c10340ca55.png" alt="NGL logo" class="mx-auto mb-4 w-20 h-20 rounded-full">
+            <h1 class="text-2xl font-bold text-gray-900 mb-1">@anonymoussconfessionsss</h1>
+            <p class="text-sm text-gray-500 mb-4">Send me anonymous messages</p>
+            <div class="bg-white rounded-xl p-3 max-w-xs mx-auto border border-gray-200">
+                <p class="text-xs text-gray-600 mb-1">?? Your link</p>
+                <p class="text-xs bg-gray-50 p-2 rounded break-all font-mono" id="linkPreview">https://ngl.link/anonymoussconfessionsss</p>
+            </div>
+        </header>
+
+        <!-- Submission Form -->
+        <div class="max-w-md mx-auto bg-white rounded-xl shadow-sm overflow-hidden px-5 py-6 mb-8">
+            <h2 class="text-xl font-bold text-black mb-4">send anonymous message</h2>
+            <form id="confessionForm" class="space-y-4">
+                <input type="hidden" id="userIdentifier" value="">
+                <div class="space-y-2">
+                    <label for="confessionText" class="block text-sm font-medium text-gray-700">Your Confession:</label>
+                    <textarea id="confessionText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-0" placeholder="Type your secret message..." required></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg transition duration-200">Send</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Confessions container - hidden by default -->
+        <div id="confessionsContainer" class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"></div>
+
+        <!-- Admin Panel Button -->
+        <div class="fixed bottom-4 right-4">
+            <button id="adminToggle" class="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confessionForm = document.getElementById('confessionForm');
+            const confessionsContainer = document.getElementById('confessionsContainer');
+            const adminToggle = document.getElementById('adminToggle');
+            let isAdminView = false;
+            const colors = ['bg-pastel-pink', 'bg-pastel-purple', 'bg-pastel-blue', 'bg-pastel-green', 'bg-pastel-yellow'];
+
+            // Generate a unique identifier for the user and store it in localStorage
+            function generateUserIdentifier() {
+                const storedId = localStorage.getItem('confessionUserId');
+                if (storedId) {
+                    return storedId;
+                }
+                const newId = 'CF' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                localStorage.setItem('confessionUserId', newId);
+                document.getElementById('userIdentifier').value = newId;
+                return newId;
+            }
+
+            generateUserIdentifier();
+
+            // Handle form submission
+            confessionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const confessionText = document.getElementById('confessionText').value.trim();
+                const userId = document.getElementById('userIdentifier').value;
+                
+                if (confessionText) {
+                    addConfession(confessionText, userId);
+                    document.getElementById('confessionText').value = '';
+                    
+                    // Show success message
+                    alert('Your confession has been posted anonymously!');
+                }
+            });
+
+            // Add a new confession to the display
+            function addConfession(text, userId) {
+                const colors = ['bg-pastel-pink', 'bg-pastel-purple', 'bg-pastel-blue', 'bg-pastel-green', 'bg-pastel-yellow'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                const now = new Date();
+                const timeDisplay = formatTimeDifference(now);
+                
+                const confessionCard = document.createElement('div');
+                confessionCard.className = `confession-card ${randomColor} p-6 rounded-lg shadow-md`;
+                confessionCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs text-gray-500">Anonymous</span>
+                        <span class="text-xs text-gray-500 ${isAdminView ? '' : 'hidden'} admin-view">User #${userId}</span>
+                    </div>
+                    <p class="text-gray-800 mb-2">${text}</p>
+                    <div class="text-xs text-gray-500 text-right">${timeDisplay}</div>
+                `;
+                
+                confessionsContainer.prepend(confessionCard);
+            }
+
+            // Format time difference for display
+            function formatTimeDifference(date) {
+                const now = new Date();
+                const diffMs = now - date;
+                const diffSec = Math.floor(diffMs / 1000);
+                const diffMin = Math.floor(diffSec / 60);
+                const diffHr = Math.floor(diffMin / 60);
+                const diffDay = Math.floor(diffHr / 24);
+                
+                if (diffSec < 60) return 'Just now';
+                if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+                if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+                return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+            }
+
+            // Toggle admin view
+            adminToggle.addEventListener('click', function() {
+                const password = prompt('Enter admin password to view sender IDs:');
+                if (password === 'secret123') { // In a real app, use a more secure method
+                    isAdminView = !isAdminView;
+                    const adminViews = document.querySelectorAll('.admin-view');
+                    adminViews.forEach(el => {
+                        el.classList.toggle('hidden');
+                    });
+                    alert(`Admin view ${isAdminView ? 'enabled' : 'disabled'}`);
+                } else {
+                    alert('Incorrect password');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
